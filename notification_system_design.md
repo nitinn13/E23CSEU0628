@@ -366,3 +366,116 @@ The API uses limits to avoid fetching large datasets in a single request.
 ## Real-Time Delivery
 
 Websockets are used to deliver real-time notifications to the client.
+
+
+# Stage 3 - Query Optimization
+
+## Given Query
+
+```sql
+SELECT * FROM notifications
+WHERE studentID = 1042 AND isRead = false
+ORDER BY createdAt ASC;
+```
+
+---
+
+# Problems In The Query
+
+- `SELECT *` fetches unnecessary columns
+- No query limit is applied
+- Sorting large datasets is expensive
+- Ascending sorting on large tables increases computation cost
+- Query performance becomes slow without proper indexing
+
+---
+
+# Optimized Query
+
+```sql
+SELECT id, type, title, message, created_at
+FROM notifications
+WHERE user_id = $1
+AND is_read = FALSE
+ORDER BY created_at DESC
+LIMIT 50;
+```
+
+---
+
+# Why This Query looks better to me
+
+- Only required columns are selected
+- `LIMIT` reduces fetched records
+- Descending order helps fetch latest notifications first
+- Optimized for indexed access
+- Lower memory and computation cost
+
+---
+
+# Recommended Index
+
+```sql
+CREATE INDEX idx_user_read_created
+ON notifications(user_id, is_read, created_at DESC);
+```
+
+---
+
+# Why This Index Is Effective
+
+The index improves:
+- Filtering by `user_id`
+- Filtering unread notifications using `is_read`
+- Sorting using `created_at`
+
+This reduces full table scans and improves query execution speed.
+
+---
+
+# Computation Cost
+
+Without indexes:
+- Full table scan
+- Time Complexity: `O(n log n)`
+
+With composite index:
+- Indexed lookup
+- Time Complexity: approximately `O(log n)`
+
+---
+
+# Should Indexes Be Added On Every Column?
+
+No.
+
+Adding indexes on every column is not effective because:
+- Insert and update operations become slower
+- Additional storage is required
+- Unused indexes waste resources
+- Database maintenance cost increases
+
+Indexes should only be created on frequently filtered, sorted, or joined columns.
+
+---
+
+# Query To Find Placement Notifications In Last 7 Days
+
+```sql
+SELECT DISTINCT user_id
+FROM notifications
+WHERE type = 'Placement'
+AND created_at >= NOW() - INTERVAL '7 days';
+```
+
+---
+
+# Optimization Techniques Used
+
+- Composite indexing
+- Selecting only required columns
+- Limiting result size
+- Efficient sorting
+- Indexed filtering
+
+
