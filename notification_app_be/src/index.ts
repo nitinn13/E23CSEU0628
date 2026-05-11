@@ -1,20 +1,52 @@
-import express from "express";
 import { LogFunction } from "../../logging_middleware/index.js";
+import { getTopPriorityNotifications } from "./utils/priority.js";
 
-const app = express();
-app.use(express.json());
+const main = async () => {
+  try {
+    await LogFunction(
+      "backend",
+      "info",
+      "service",
+      "Fetching top priority notifications"
+    );
 
+    const notifications = await getTopPriorityNotifications();
 
+    await LogFunction(
+      "backend",
+      "info",
+      "service",
+      "Successfully ranked notifications"
+    );
 
+    console.log("\nTop 10 Priority Notifications\n");
 
+    console.table(
+      notifications.map((notification) => ({
+        ID: notification.ID,
+        Type: notification.Type,
+        Message: notification.Message,
+        Timestamp: notification.Timestamp,
+        Score: notification.score.toFixed(2),
+      }))
+    );
 
+    await LogFunction(
+      "backend",
+      "info",
+      "service",
+      "Displayed top 10 notifications"
+    );
+  } catch (error) {
+    await LogFunction(
+      "backend",
+      "error",
+      "service",
+      "Failed to fetch priority notifications"
+    );
 
-app.get("/", (req, res) => {
-    console.log("got a req at / ");
-    LogFunction("backend", "info", "controller", "Testing if logger works");
-    res.send("Hello World!");
-});
+    console.error("Error fetching notifications");
+  }
+};
 
-app.listen(3000, () => {
-    console.log("Server is running on port 3000");
-});
+main();

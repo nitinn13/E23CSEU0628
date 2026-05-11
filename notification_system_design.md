@@ -666,3 +666,101 @@ WebSocket workers instantly push notifications to connected users after processi
 
 This reduces client-side polling and improves user experience.
 If we don't use WebSockets, the client would have to poll the API every few seconds to check for new notifications which is also called long polling.
+
+
+
+# Stage 6 - Priority Notifications
+
+## Overview
+
+A Priority Inbox system is implemented to display the top 10 most important unread notifications.
+
+Priority is determined using:
+- Notification type
+- Recency of notification
+
+Priority order:
+
+```txt
+Placement > Result > Event
+```
+
+---
+
+![Stage 6 Output](./notification_app_be/screenshot/stage6.png)
+
+# Notification Source
+
+Notifications are fetched dynamically from the provided Notification API.
+
+```http
+GET http://4.224.186.213/evaluation-service/notifications
+```
+
+Authorization headers are included while fetching notifications.
+
+---
+
+# Priority Calculation
+
+Each notification is assigned a score using:
+- Higher weight for important notification types
+- Higher priority for recent notifications
+
+Formula:
+
+```txt
+score = (typeWeight * 1000000) - notificationAgeInSeconds
+```
+
+Weights:
+
+| Type | Weight |
+|---|---|
+| Placement | 3 |
+| Result | 2 |
+| Event | 1 |
+
+---
+
+# Approach
+
+1. Fetch notifications from API
+2. Calculate priority score for each notification
+3. Sort notifications based on score
+4. Return top 10 notifications
+
+---
+
+# Complexity
+
+```txt
+Sorting Complexity: O(n log n)
+Overall Complexity: O(n log n)
+```
+
+---
+
+# Scalability
+
+The implementation supports continuous incoming notifications.
+
+As new notifications arrive:
+- Scores are recalculated
+- Notifications are re-sorted
+- Latest top 10 notifications are returned
+
+---
+
+# Optimization
+
+Only top 10 notifications are returned to reduce unnecessary data processing and improve response time.
+
+---
+
+# Technologies Used
+
+- Node.js
+- TypeScript
+- Fetch API
+- WebSockets
