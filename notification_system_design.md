@@ -764,3 +764,12 @@ Only top 10 notifications are returned to reduce unnecessary data processing and
 - TypeScript
 - Fetch API
 - WebSockets
+
+
+# Stage 7 - Notification Priority Inbox
+
+## Overview
+
+A priority inbox system is implemented to display the top 10 most important unread notifications.
+
+## The demo video has been attached in the screenrecording folder or u can view it here: https://youtu.be/HMQOcW2p-GQ
