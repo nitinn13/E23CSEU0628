@@ -568,3 +568,101 @@ Using caching, indexing, and WebSockets significantly reduces:
 - unnecessary network traffic
 
 while improving scalability and real-time performance.
+
+
+
+# Stage 5 - Notification Delivery Architecture
+
+## Problems In The Given Approach
+
+The provided notification delivery approach has the following issues:
+
+- Notifications are processed sequentially
+- Failure in one service can stop the entire flow
+- No retry mechanism exists
+- No scalability for large traffic
+- Tight coupling between services
+- High response time for users
+
+---
+
+# Improved Architecture
+
+A queue-based asynchronous architecture is used for reliable and scalable notification delivery.
+
+Flow:
+
+```txt
+Client Request
+      ↓
+Backend API
+      ↓
+Store Notification In Database
+      ↓
+Push Job To Queue
+      ↓
+Workers Process Notifications
+      ├── WebSocket Worker
+      ├── Email Worker
+      └── Push Notification Worker
+```
+
+---
+
+# Queue System
+
+Redis with BullMQ is used for background job processing.
+
+Benefits:
+- Asynchronous processing
+- Retry support
+- Better scalability
+- Fault tolerance
+- Reduced API response time
+
+---
+
+# Retry Mechanism
+
+Failed jobs are automatically retried using exponential backoff.
+
+Example:
+- Retry after 5 seconds
+- Retry after 15 seconds
+- Retry after 30 seconds
+
+This improves reliability during temporary failures.
+
+---
+
+# Idempotency
+
+Each notification job contains a unique job ID to avoid duplicate notification delivery during retries.
+
+---
+
+# Failure Handling
+
+If a worker fails:
+- The job remains in the queue
+- Retry mechanism attempts delivery again
+- Failed jobs can be moved to a dead letter queue for debugging
+
+---
+
+# Benefits Of This Architecture
+
+- Faster API responses
+- Reliable notification delivery
+- Better scalability
+- Fault isolation between services
+- Improved system stability during high traffic
+
+---
+
+# Real-Time Delivery
+
+WebSocket workers instantly push notifications to connected users after processing the queue.
+
+This reduces client-side polling and improves user experience.
+If we don't use WebSockets, the client would have to poll the API every few seconds to check for new notifications which is also called long polling.
